@@ -1,4 +1,7 @@
 const express = require('express');
+const arrayJson = require('./talker.json');
+
+console.log(arrayJson);
 
 const app = express();
 app.use(express.json());
