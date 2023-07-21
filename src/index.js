@@ -55,6 +55,16 @@ const writeFileFunc = async (path, data) => {
 const getRandomCrypto = () => Math.random().toString(16).substr(2) 
 + Math.random().toString(16).substr(2, 3);
 
+const createNewData = (id, data, newTalkerInfo) => {
+  const newData = data.map((talker) => {
+    if (talker.id === Number(id)) {
+      return newTalkerInfo;
+    }
+    return talker;
+  });
+  return JSON.stringify(newData);
+};
+
 app.get('/talker/search',
   validateAuth,
   validateSearchRate,
@@ -73,6 +83,21 @@ app.get('/talker/search',
     filteredData = filteredData.filter(({ talk }) => talk.watchedAt === date);
   }
   res.status(200).send(filteredData);
+});
+
+app.patch('/talker/rate/:id', 
+  validateAuth,
+  validateTalkRate,
+  async ({ body, params }, res) => {
+  const { id } = params;  
+  const data = await readFileFunc(talkerJsonPath);
+  const talkerInfo = data.find((talker) => talker.id === Number(id)); 
+  if (!talkerInfo) {
+    return res.status(404).json({ message: 'Pessoa palestrante não encontrada' });
+  }
+  const newTalkerInfo = { ...talkerInfo, talk: { ...talkerInfo.talk, ...body } };
+  await writeFileFunc(talkerJsonPath, createNewData(id, data, newTalkerInfo));
+  res.status(204).end();
 });
 
 app.get('/talker', async (req, res) => {
@@ -115,13 +140,7 @@ validateAuth,
     return res.status(404).json({ message: 'Pessoa palestrante não encontrada' });
   }
   const newTalkerInfo = { ...body, id: talkerInfo.id };
-  const newData = data.map((talker) => {
-    if (talker.id === Number(id)) {
-      return newTalkerInfo;
-    }
-    return talker;
-  });
-  await writeFileFunc(talkerJsonPath, JSON.stringify(newData));
+  await writeFileFunc(talkerJsonPath, createNewData(id, data, newTalkerInfo));
   res.status(200).send(newTalkerInfo);
 });
 
