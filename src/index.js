@@ -4,7 +4,7 @@ const fs = require('fs').promises;
 const { validateAuth } = require('./middlewares/checkAuth');
 const { validateTalkerName, validateTalkerAge,
   validateTalkDate, validateTalkInfo, validateTalkRate } = require('./middlewares/checkTalkerBody');
-const { validateSearchRate } = require('./middlewares/checkTalkerSearch');
+const { validateSearchRate, validateSearchDate } = require('./middlewares/checkTalkerSearch');
 
 const app = express();
 
@@ -58,15 +58,19 @@ const getRandomCrypto = () => Math.random().toString(16).substr(2)
 app.get('/talker/search',
   validateAuth,
   validateSearchRate,
+  validateSearchDate,
   async ({ query }, res) => {
-  // const { q, rate } = query;
+  const { q, rate, date } = query;
   const data = await readFileFunc(talkerJsonPath);
   let filteredData = data;
-  if (query.rate) {
-    filteredData = filteredData.filter(({ talk }) => talk.rate === Number(query.rate));
+  if (rate) {
+    filteredData = filteredData.filter(({ talk }) => talk.rate === Number(rate));
   }
-  if (query.q) {
-    filteredData = filteredData.filter(({ name }) => name.includes(query.q));
+  if (q) {
+    filteredData = filteredData.filter(({ name }) => name.includes(q));
+  }
+  if (date) {
+    filteredData = filteredData.filter(({ talk }) => talk.watchedAt === date);
   }
   res.status(200).send(filteredData);
 });
