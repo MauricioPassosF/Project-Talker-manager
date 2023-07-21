@@ -1,8 +1,35 @@
 const express = require('express');
-
+const z = require('zod');
 const fs = require('fs').promises;
 
+const app = express();
+
+app.use(express.json());
+
 const talkerJsonPath = './src/talker.json';
+
+const validateEmail = ({ body }, res, next) => {
+  const { email } = body;
+  const emailSchema = z.string().email();
+  if (!email) {
+    return res.status(400).json({ message: 'O campo "email" é obrigatório' });
+  }
+  if (!emailSchema.safeParse(email).success) {
+    return res.status(400).json({ message: 'O "email" deve ter o formato "email@email.com"' });
+  }
+  next();
+};
+
+const validatePassword = ({ body }, res, next) => {
+  const { password } = body;
+  if (!password) {
+    return res.status(400).json({ message: 'O campo "password" é obrigatório' });
+  }
+  if (password.length < 6) {
+    return res.status(400).json({ message: 'O "password" deve ter pelo menos 6 caracteres' });
+  }
+  next();
+};
 
 const readFileFunc = async (path) => {
   try {
@@ -13,13 +40,8 @@ const readFileFunc = async (path) => {
   }
 };
 
-// const getRandomCrypto = () => cryptoRandomString({ length: 16 });
 const getRandomCrypto = () => Math.random().toString(16).substr(2) 
 + Math.random().toString(16).substr(2, 3);
-
-const app = express();
-
-app.use(express.json());
 
 app.get('/talker', async (req, res) => {
   const data = await readFileFunc(talkerJsonPath);
@@ -37,7 +59,10 @@ app.get('/talker/:id', async (req, res) => {
   res.status(200).send(person[0]);
 });
 
-app.post('/login', (req, res) => {
+app.post('/login',
+ validateEmail,
+ validatePassword, 
+ (req, res) => {
   res.status(200).json({ token: getRandomCrypto() });
 });
 
