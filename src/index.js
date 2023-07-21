@@ -70,6 +70,15 @@ app.get('/talker/:id', async (req, res) => {
   res.status(200).send(talkerInfo);
 });
 
+app.delete('/talker/:id', validateAuth, async (req, res) => {
+  const { id } = req.params;
+  const data = await readFileFunc(talkerJsonPath);
+
+  const newData = data.filter((talker) => talker.id !== Number(id));
+  await writeFileFunc(talkerJsonPath, JSON.stringify(newData));
+  res.status(204).end();
+});
+
 app.put('/talker/:id',
 validateTalkerName,
 validateTalkerAge,
