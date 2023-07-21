@@ -1,6 +1,9 @@
 const express = require('express');
 const z = require('zod');
 const fs = require('fs').promises;
+const { validateAuth } = require('./middlewares/checkAuth');
+const { validateTalkerName, validateTalkerAge,
+  validateTalkDate, validateTalkInfo, validateTalkRate } = require('./middlewares/checkTalkerBody');
 
 const app = express();
 
@@ -40,6 +43,14 @@ const readFileFunc = async (path) => {
   }
 };
 
+const writeFileFunc = async (path, data) => {
+  try {
+    await fs.writeFile(path, data);
+  } catch (err) {
+    console.error(`Erro ao ler o arquivo: ${err.message}`);
+  }
+};
+
 const getRandomCrypto = () => Math.random().toString(16).substr(2) 
 + Math.random().toString(16).substr(2, 3);
 
@@ -57,6 +68,22 @@ app.get('/talker/:id', async (req, res) => {
     res.status(404).json({ message: 'Pessoa palestrante não encontrada' });
   }
   res.status(200).send(person[0]);
+});
+
+app.post('/talker',
+  validateAuth,
+  validateTalkerName,
+  validateTalkerAge,
+  validateTalkInfo,
+  validateTalkRate,
+  validateTalkDate,
+  async ({ body }, res) => {
+  const data = await readFileFunc(talkerJsonPath);
+  const nextID = data.length + 1;
+  const newTalker = { ...body, id: nextID };
+  data.push(newTalker);
+  await writeFileFunc(talkerJsonPath, JSON.stringify(data));
+  res.status(201).send(newTalker);
 });
 
 app.post('/login',
