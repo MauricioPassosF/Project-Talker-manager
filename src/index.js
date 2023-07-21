@@ -61,13 +61,38 @@ app.get('/talker', async (req, res) => {
 
 app.get('/talker/:id', async (req, res) => {
   const { id } = req.params;
-  const talkers = await readFileFunc(talkerJsonPath);
-  const person = talkers.filter((talker) => talker.id === Number(id)); 
+  const data = await readFileFunc(talkerJsonPath);
+  const talkerInfo = data.find((talker) => talker.id === Number(id)); 
 
-  if (person.length === 0) {
-    res.status(404).json({ message: 'Pessoa palestrante não encontrada' });
+  if (!talkerInfo) {
+    return res.status(404).json({ message: 'Pessoa palestrante não encontrada' });
   }
-  res.status(200).send(person[0]);
+  res.status(200).send(talkerInfo);
+});
+
+app.put('/talker/:id',
+validateTalkerName,
+validateTalkerAge,
+validateTalkInfo,
+validateTalkRate,
+validateTalkDate,
+validateAuth,
+  async ({ body, params }, res) => {
+  const { id } = params;  
+  const data = await readFileFunc(talkerJsonPath);
+  const talkerInfo = data.find((talker) => talker.id === Number(id)); 
+  if (!talkerInfo) {
+    return res.status(404).json({ message: 'Pessoa palestrante não encontrada' });
+  }
+  const newTalkerInfo = { ...body, id: talkerInfo.id };
+  const newData = data.map((talker) => {
+    if (talker.id === Number(id)) {
+      return newTalkerInfo;
+    }
+    return talker;
+  });
+  await writeFileFunc(talkerJsonPath, JSON.stringify(newData));
+  res.status(200).send(newTalkerInfo);
 });
 
 app.post('/talker',
