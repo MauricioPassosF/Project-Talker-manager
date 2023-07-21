@@ -54,6 +54,13 @@ const writeFileFunc = async (path, data) => {
 const getRandomCrypto = () => Math.random().toString(16).substr(2) 
 + Math.random().toString(16).substr(2, 3);
 
+app.get('/talker/search', validateAuth, async ({ query }, res) => {
+  const { q } = query;
+  const data = await readFileFunc(talkerJsonPath);
+  const filterData = data.filter(({ name }) => name.includes(q));
+  res.status(200).send(filterData);
+});
+
 app.get('/talker', async (req, res) => {
   const data = await readFileFunc(talkerJsonPath);
   res.status(200).send(data);
