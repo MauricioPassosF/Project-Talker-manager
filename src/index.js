@@ -4,6 +4,7 @@ const fs = require('fs').promises;
 const { validateAuth } = require('./middlewares/checkAuth');
 const { validateTalkerName, validateTalkerAge,
   validateTalkDate, validateTalkInfo, validateTalkRate } = require('./middlewares/checkTalkerBody');
+const { validateSearchRate } = require('./middlewares/checkTalkerSearch');
 
 const app = express();
 
@@ -54,11 +55,20 @@ const writeFileFunc = async (path, data) => {
 const getRandomCrypto = () => Math.random().toString(16).substr(2) 
 + Math.random().toString(16).substr(2, 3);
 
-app.get('/talker/search', validateAuth, async ({ query }, res) => {
-  const { q } = query;
+app.get('/talker/search',
+  validateAuth,
+  validateSearchRate,
+  async ({ query }, res) => {
+  // const { q, rate } = query;
   const data = await readFileFunc(talkerJsonPath);
-  const filterData = data.filter(({ name }) => name.includes(q));
-  res.status(200).send(filterData);
+  let filteredData = data;
+  if (query.rate) {
+    filteredData = filteredData.filter(({ talk }) => talk.rate === Number(query.rate));
+  }
+  if (query.q) {
+    filteredData = filteredData.filter(({ name }) => name.includes(query.q));
+  }
+  res.status(200).send(filteredData);
 });
 
 app.get('/talker', async (req, res) => {
