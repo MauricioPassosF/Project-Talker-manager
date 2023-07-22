@@ -53,8 +53,14 @@ const writeFileFunc = async (path, data) => {
   }
 };
 
-const getRandomCrypto = () => Math.random().toString(16).substr(2) 
-+ Math.random().toString(16).substr(2, 3);
+const getRandomCrypto = () => {
+  let crypto = '';
+  do {
+  crypto = Math.random().toString(16).substr(2) 
+  + Math.random().toString(16).substr(2, 3);
+} while (crypto.length !== 16);
+  return crypto;
+};
 
 const createNewData = (id, data, newTalkerInfo) => {
   const newData = data.map((talker) => {
