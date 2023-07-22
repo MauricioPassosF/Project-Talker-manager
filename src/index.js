@@ -5,6 +5,7 @@ const { validateAuth } = require('./middlewares/checkAuth');
 const { validateTalkerName, validateTalkerAge,
   validateTalkDate, validateTalkInfo, validateTalkRate } = require('./middlewares/checkTalkerBody');
 const { validateSearchRate, validateSearchDate } = require('./middlewares/checkTalkerSearch');
+const { findAll } = require('./db/dbFunctions');
 
 const app = express();
 
@@ -100,6 +101,25 @@ app.patch('/talker/rate/:id',
   res.status(204).end();
 });
 
+app.get('/talker/db', async (_req, res) => {
+  try {
+    const [talkersDB] = await findAll();
+    const data = talkersDB.map((talker) => ({
+      age: talker.age,
+      id: talker.id,
+      name: talker.name,
+      talk: {
+        rate: talker.talk_rate,
+        watchedAt: talker.talk_watched_at,
+      },
+    }));
+    res.status(200).json(data);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ message: err.sqlMessage });
+  }
+});
+
 app.get('/talker', async (req, res) => {
   const data = await readFileFunc(talkerJsonPath);
   res.status(200).send(data);
@@ -175,6 +195,6 @@ app.get('/', (_request, response) => {
   response.status(HTTP_OK_STATUS).send();
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log('Online');
 });
