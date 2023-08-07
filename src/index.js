@@ -9,17 +9,10 @@ const app = express();
 
 app.use(express.json());
 
-app.use('/login', loginRoutes);
-
-app.use('/talker/search', talkerSearchRoutes);
-
-app.use('/talker/rate/', talkerRateRoutes);
-
-app.use('/talker', talkerRoutes);
-
 app.get('/talker/db', async (_req, res) => {
   try {
     const [talkersDB] = await findAll();
+    console.log(talkersDB);
     const data = talkersDB.map((talker) => ({
       age: talker.age,
       id: talker.id,
@@ -35,6 +28,14 @@ app.get('/talker/db', async (_req, res) => {
     res.status(500).json({ message: err.sqlMessage });
   }
 });
+
+app.use('/login', loginRoutes);
+
+app.use('/talker/search', talkerSearchRoutes);
+
+app.use('/talker/rate/', talkerRateRoutes);
+
+app.use('/talker', talkerRoutes);
 
 const HTTP_OK_STATUS = 200;
 const PORT = process.env.PORT || '3001';
